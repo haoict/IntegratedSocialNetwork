@@ -1,4 +1,5 @@
-﻿using IntegratedSocialNetwork.Common;
+﻿using IntegratedSocialNetwork.Model;
+using LinqToTwitter;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,8 +7,6 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
-using Windows.Graphics.Display;
-using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -16,7 +15,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 
-// The Basic Page item template is documented at http://go.microsoft.com/fwlink/?LinkID=390556
+// The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkID=390556
 
 namespace IntegratedSocialNetwork.View
 {
@@ -25,87 +24,90 @@ namespace IntegratedSocialNetwork.View
 	/// </summary>
 	public sealed partial class TwitterControls : Page
 	{
-		private NavigationHelper navigationHelper;
-		private ObservableDictionary defaultViewModel = new ObservableDictionary();
+		public List<Tweet> Tweets { get; set; }
 
 		public TwitterControls()
 		{
 			this.InitializeComponent();
-
-			this.navigationHelper = new NavigationHelper(this);
-			this.navigationHelper.LoadState += this.NavigationHelper_LoadState;
-			this.navigationHelper.SaveState += this.NavigationHelper_SaveState;
 		}
 
 		/// <summary>
-		/// Gets the <see cref="NavigationHelper"/> associated with this <see cref="Page"/>.
+		/// Invoked when this page is about to be displayed in a Frame.
 		/// </summary>
-		public NavigationHelper NavigationHelper
-		{
-			get { return this.navigationHelper; }
-		}
-
-		/// <summary>
-		/// Gets the view model for this <see cref="Page"/>.
-		/// This can be changed to a strongly typed view model.
-		/// </summary>
-		public ObservableDictionary DefaultViewModel
-		{
-			get { return this.defaultViewModel; }
-		}
-
-		/// <summary>
-		/// Populates the page with content passed during navigation.  Any saved state is also
-		/// provided when recreating a page from a prior session.
-		/// </summary>
-		/// <param name="sender">
-		/// The source of the event; typically <see cref="NavigationHelper"/>
-		/// </param>
-		/// <param name="e">Event data that provides both the navigation parameter passed to
-		/// <see cref="Frame.Navigate(Type, Object)"/> when this page was initially requested and
-		/// a dictionary of state preserved by this page during an earlier
-		/// session.  The state will be null the first time a page is visited.</param>
-		private void NavigationHelper_LoadState(object sender, LoadStateEventArgs e)
-		{
-		}
-
-		/// <summary>
-		/// Preserves state associated with this page in case the application is suspended or the
-		/// page is discarded from the navigation cache.  Values must conform to the serialization
-		/// requirements of <see cref="SuspensionManager.SessionState"/>.
-		/// </summary>
-		/// <param name="sender">The source of the event; typically <see cref="NavigationHelper"/></param>
-		/// <param name="e">Event data that provides an empty dictionary to be populated with
-		/// serializable state.</param>
-		private void NavigationHelper_SaveState(object sender, SaveStateEventArgs e)
-		{
-		}
-
-		#region NavigationHelper registration
-
-		/// <summary>
-		/// The methods provided in this section are simply used to allow
-		/// NavigationHelper to respond to the page's navigation methods.
-		/// <para>
-		/// Page specific logic should be placed in event handlers for the  
-		/// <see cref="NavigationHelper.LoadState"/>
-		/// and <see cref="NavigationHelper.SaveState"/>.
-		/// The navigation parameter is available in the LoadState method 
-		/// in addition to page state preserved during an earlier session.
-		/// </para>
-		/// </summary>
-		/// <param name="e">Provides data for navigation methods and event
-		/// handlers that cannot cancel the navigation request.</param>
+		/// <param name="e">Event data that describes how this page was reached.
+		/// This parameter is typically used to configure the page.</param>
 		protected override void OnNavigatedTo(NavigationEventArgs e)
 		{
-			this.navigationHelper.OnNavigatedTo(e);
+			Login_Click(null, null);
 		}
 
-		protected override void OnNavigatedFrom(NavigationEventArgs e)
+		public Action<string> GoToTwitterAuthorization { get; set; } 
+
+		private async void Login_Click(object sender, RoutedEventArgs e)
 		{
-			this.navigationHelper.OnNavigatedFrom(e);
-		}
+			this.myProgressRing.Visibility = Visibility.Visible;
 
-		#endregion
+
+			if (SharedState.Authorizer == null)
+			{
+				var auth = new SingleUserAuthorizer
+				{
+					CredentialStore = new InMemoryCredentialStore
+					{
+						ConsumerKey = "MsLLdIN5d4tGig1mIOd544sre",
+						ConsumerSecret = "ZPHLC05kp0wt2ZZMYPsCPMrLlhe7bXIPgHP2BaK2PHoMSl8OWR",
+						OAuthToken = "730162950-GA2MJy8n6vqwstq2ZgCaU3fe5JzZjAi8bOKXN9sN",
+						OAuthTokenSecret = "ss5yUNU1RwXws2iuQMFZ77pC97r6smuoNO5e0pm8d6xux"
+					},
+				};
+
+				await auth.AuthorizeAsync();
+
+				SharedState.Authorizer = auth;
+
+// 				var xauth = new XAuthAuthorizer
+// 				{
+// 					CredentialStore = new XAuthCredentials
+// 					{
+// 						ConsumerKey = "MsLLdIN5d4tGig1mIOd544sre",
+// 						ConsumerSecret = "ZPHLC05kp0wt2ZZMYPsCPMrLlhe7bXIPgHP2BaK2PHoMSl8OWR",
+// 						UserName = "haoict",
+// 						OAuthTokenSecret = "thanhdat1234"
+// 					},
+// 				};
+// 				await xauth.AuthorizeAsync();
+// 				SharedState.Authorizer = xauth;
+			}
+
+
+
+			//////////
+			var twitterCtx = new TwitterContext(SharedState.Authorizer);
+
+			var timelineResponse =
+				await
+				(from tweet in twitterCtx.Status
+				 where tweet.Type == StatusType.Home
+				 select tweet)
+				.ToListAsync();
+
+
+			Tweets =
+				(from tweet in timelineResponse
+				 select new Tweet
+				 {
+					 Name = tweet.User.ScreenNameResponse,
+					 Text = tweet.Text,
+					 ImageUrl = tweet.User.ProfileImageUrl
+				 })
+				.ToList();
+
+// 			foreach (var tw in Tweets)
+// 				tessss.Text += tw.Text + "\r\n";
+
+			newFeedList.ItemsSource = Tweets;
+
+			this.myProgressRing.Visibility = Visibility.Collapsed;
+		}
 	}
 }

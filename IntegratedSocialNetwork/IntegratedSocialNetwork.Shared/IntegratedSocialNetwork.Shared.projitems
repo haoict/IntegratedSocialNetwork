@@ -18,7 +18,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)GlobalData.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GlobalUtil.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Model\Post.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Model\Tweet.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Model\User.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SharedState.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModel\HomeViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModel\ViewModelLocator.cs" />
     <Content Include="$(MSBuildThisFileDirectory)Assets\LightGray.png" />
