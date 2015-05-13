@@ -26,7 +26,6 @@ namespace IntegratedSocialNetwork.View
 	/// </summary>
 	public sealed partial class TestView : Page
 	{
-		public string headern { get; private set; }
 		public ObservableCollection<ISNPost> itemsList { get; set; }
 
 		public TestView()
@@ -42,8 +41,6 @@ namespace IntegratedSocialNetwork.View
 		protected override void OnNavigatedTo(NavigationEventArgs e)
 		{
 			OnQueryButtonClick(null, null);
-
-			headern = "asdfadsf";
 		}
 
 		private async void OnQueryButtonClick(object sender, RoutedEventArgs e)
@@ -55,7 +52,7 @@ namespace IntegratedSocialNetwork.View
 			FetchFacebookNewFeed();
 			FetchTwitterNewFeed();
 
-			
+
 
 			//this.myProgressRing.Visibility = Visibility.Collapsed;
 		}
@@ -91,7 +88,6 @@ namespace IntegratedSocialNetwork.View
 
 			}
 			//this.myProgressRing.Visibility = Visibility.Collapsed;
-			MessageDialogHelper.Show("adsf");
 		}
 
 		private async void FetchTwitterNewFeed()

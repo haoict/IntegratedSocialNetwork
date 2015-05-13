@@ -66,91 +66,79 @@ namespace IntegratedSocialNetwork.View
 		{
 			this.myProgressRing.Visibility = Visibility.Visible;
 			itemsList = new ObservableCollection<ISNPost>();
-			//plv.newFeedList.ItemsSource = itemsList;
+			newFeedList.ItemsSource = itemsList;
 
-			FetchFacebookNewFeed("/me/home");
-			FetchTwitterNewFeed(StatusType.Home);
+			FetchFacebookNewFeed();
+			FetchTwitterNewFeed();
 
 			
 			
 			//this.myProgressRing.Visibility = Visibility.Collapsed;
 		}
 
-		private async void FetchFacebookNewFeed(string feedType)
+		private async void FetchFacebookNewFeed()
 		{
-			try
+			// get facebook new feed
+			var fb = new Facebook.FacebookClient(Session.ActiveSession.CurrentAccessTokenData.AccessToken);
+
+			var parameters = new Dictionary<string, object>();
+			parameters[""] = "";
+
+			dynamic result = await fb.GetTaskAsync("/me/home", parameters);
+
+			foreach (var data in result[0])
 			{
-				var fb = new Facebook.FacebookClient(Session.ActiveSession.CurrentAccessTokenData.AccessToken);
-
-				var parameters = new Dictionary<string, object>();
-				parameters[""] = "";
-
-				dynamic result = await fb.GetTaskAsync(feedType, parameters);
-
-				foreach (var data in result[0])
+				ISNPost tmp = new ISNPost();
+				ISNUser usr = new ISNUser();
+				try
 				{
-					ISNPost tmp = new ISNPost();
-					ISNUser usr = new ISNUser();
-					try
-					{
-						tmp.id = data["id"];
-						tmp.message = data["message"];
-						usr.id = data["from"]["id"];
-						usr.name = data["from"]["name"];
-						usr.picture = "http://graph.facebook.com/" + data["from"]["id"] + "/picture";
-						tmp.user = usr;
-						itemsList.Add(tmp);
-					}
-					catch (Exception exc)
-					{
-						continue;
-					}
-
+					tmp.id = data["id"];
+					tmp.message = data["message"];
+					usr.id = data["from"]["id"];
+					usr.name = data["from"]["name"];
+					usr.picture = "http://graph.facebook.com/" + data["from"]["id"] + "/picture";
+					tmp.user = usr;
+					itemsList.Add(tmp);
 				}
-			}
-			catch (Exception exc)
-			{
-				MessageDialogHelper.Show(exc.Message, "Error");
+				catch (Exception exc)
+				{
+					continue;
+				}
+
 			}
 			this.myProgressRing.Visibility = Visibility.Collapsed;
 		}
 
-		private async void FetchTwitterNewFeed(StatusType sttType)
+		private async void FetchTwitterNewFeed()
 		{
-			try
+			// get tw new feed
+			if (SharedState.Authorizer != null)
 			{
-				if (SharedState.Authorizer != null)
+				var twitterCtx = new TwitterContext(SharedState.Authorizer);
+
+				var timelineResponse =
+					await
+					(from tweet in twitterCtx.Status
+					 where tweet.Type == StatusType.Home
+					 select tweet)
+					.ToListAsync();
+
+
+				List<ISNPost> Tweets =
+					(from tweet in timelineResponse
+					 select new ISNPost
+					 {
+						 user = new ISNUser("", tweet.User.ScreenNameResponse, tweet.User.ProfileImageUrl),
+						 message = tweet.Text,
+					 })
+					.ToList();
+
+				foreach (ISNPost isnp in Tweets)
 				{
-					var twitterCtx = new TwitterContext(SharedState.Authorizer);
-
-					var timelineResponse =
-						await
-						(from tweet in twitterCtx.Status
-						 where tweet.Type == sttType
-						 select tweet)
-						.ToListAsync();
-
-
-					List<ISNPost> Tweets =
-						(from tweet in timelineResponse
-						 select new ISNPost
-						 {
-							 user = new ISNUser("", tweet.User.ScreenNameResponse, tweet.User.ProfileImageUrl),
-							 message = tweet.Text,
-						 })
-						.ToList();
-
-					foreach (ISNPost isnp in Tweets)
-					{
-						itemsList.Add(isnp);
-					}
+					itemsList.Add(isnp);
 				}
+				this.myProgressRing.Visibility = Visibility.Collapsed;
 			}
-			catch (Exception exc)
-			{
-				MessageDialogHelper.Show(exc.Message, "Error");
-			}
-			this.myProgressRing.Visibility = Visibility.Collapsed;
 		}
 
 		private async void PublishStory()
