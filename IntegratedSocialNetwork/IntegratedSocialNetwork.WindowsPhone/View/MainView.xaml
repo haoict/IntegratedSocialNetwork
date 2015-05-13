@@ -37,37 +37,35 @@
 					<Grid x:Name="ContentPanel" Grid.Row="1">
 						<ProgressRing x:Name="myProgressRing" IsActive="True" Height="50" Width="50" />
 
-						<ListView x:Name="newFeedList" 
-								  SelectionChanged="ListView_SelectionChanged" 
-								  >
+						<ListView x:Name="newFeedList" ItemsSource="{Binding itemsList}" SelectionChanged="ListView_SelectionChanged">
 							<ListView.ItemTemplate>
 								<DataTemplate>
 									<StackPanel Orientation="Vertical" Margin="0">
 										<StackPanel Orientation="Horizontal" VerticalAlignment="Top">
 
 											<Ellipse 
-												VerticalAlignment="Top"
-												Pivot.SlideInAnimationGroup="3" 
-												Width="50" Height="50" 
-												Stretch="Fill">
+							VerticalAlignment="Top"
+							Pivot.SlideInAnimationGroup="3" 
+							Width="50" Height="50" 
+							Stretch="Fill">
 												<Ellipse.Fill>
 													<ImageBrush ImageSource="{Binding user.picture}"/>
 												</Ellipse.Fill>
 											</Ellipse>
-											
+
 											<StackPanel Orientation="Vertical" Margin="10,0,5,0">
 												<TextBlock Text="{Binding user.name}"
-														   HorizontalAlignment="Left"
-														TextWrapping="NoWrap"
-														Foreground="Blue"
-														FontWeight="Bold"
-														FontSize="20"
-														Width="300"
-														Pivot.SlideInAnimationGroup="1"
-														CommonNavigationTransitionInfo.IsStaggerElement="True"
-														LineHeight="15"
-														Style="{ThemeResource ListViewItemTextBlockStyle}"
-														Margin="0,0,15,0">
+								HorizontalAlignment="Left"
+								TextWrapping="NoWrap"
+								Foreground="Blue"
+								FontWeight="Bold"
+								FontSize="20"
+								Width="300"
+								Pivot.SlideInAnimationGroup="1"
+								CommonNavigationTransitionInfo.IsStaggerElement="True"
+								LineHeight="15"
+								Style="{ThemeResource ListViewItemTextBlockStyle}"
+								Margin="0,0,15,0">
 													<TextBlock.Transitions>
 														<TransitionCollection>
 															<EntranceThemeTransition FromVerticalOffset="0" FromHorizontalOffset="200" />
@@ -76,14 +74,14 @@
 												</TextBlock>
 
 												<TextBlock 
-													Text="{Binding message}"
-													TextWrapping="Wrap"
-													FontSize="15"
-													Pivot.SlideInAnimationGroup="1"
-													CommonNavigationTransitionInfo.IsStaggerElement="True"
-													LineHeight="15"
-													Style="{ThemeResource ListViewItemTextBlockStyle}"
-													Margin="0,0,0,0">
+								Text="{Binding message}"
+								TextWrapping="Wrap"
+								FontSize="15"
+								Pivot.SlideInAnimationGroup="1"
+								CommonNavigationTransitionInfo.IsStaggerElement="True"
+								LineHeight="15"
+								Style="{ThemeResource ListViewItemTextBlockStyle}"
+								Margin="0,0,0,0">
 													<TextBlock.Transitions>
 														<TransitionCollection>
 															<EntranceThemeTransition FromVerticalOffset="0" FromHorizontalOffset="200" />
@@ -91,10 +89,10 @@
 													</TextBlock.Transitions>
 												</TextBlock>
 											</StackPanel>
-											
+
 										</StackPanel>
 
-										
+
 									</StackPanel>
 								</DataTemplate>
 							</ListView.ItemTemplate>

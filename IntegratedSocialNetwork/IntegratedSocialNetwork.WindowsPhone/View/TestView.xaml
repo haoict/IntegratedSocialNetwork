@@ -5,13 +5,13 @@
 	xmlns:local="using:IntegratedSocialNetwork.View"
 	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-	mc:Ignorable="d"
 	xmlns:facebookControls="using:Facebook.Client.Controls"
-	Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+	Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+	mc:Ignorable="d">
 
 	<Grid>
-		<Hub x:Name="Hub" x:Uid="Hub" Header=" ">
-			<HubSection x:Uid="HubSection1" Header="new feed" DataContext="{Binding Groups}">
+		<Hub x:Name="Hub" x:Uid="Hub" Header="">
+			<HubSection x:Uid="HubSection1" Header="new feed" FontSize="50">
 				<DataTemplate>
 					<ListView x:Name="newFeedList" 
 						SelectionChanged="ListView_SelectionChanged"
