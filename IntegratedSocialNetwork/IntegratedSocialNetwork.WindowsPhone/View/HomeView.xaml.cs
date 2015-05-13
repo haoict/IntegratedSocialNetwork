@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LinqToTwitter;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -45,37 +46,41 @@ namespace IntegratedSocialNetwork.View
 			
 		}
 
-		private void OnSessionStateChanged(object sender, Facebook.Client.Controls.SessionStateChangedEventArgs e)
-		{
-// 			this.myProgressRing.Visibility = (e.SessionState == Facebook.Client.Controls.FacebookSessionState.Opened) ? Visibility.Visible : Visibility.Collapsed;
-// 			//loginButton.Visibility = Visibility.Collapsed;
-// 
-// 			if (e.SessionState == Facebook.Client.Controls.FacebookSessionState.Opened)
-// 			{
-// 				this.userInfo.Visibility = Visibility.Visible;
-// 				this.RetriveUserInfo();
-// 				this.OnQueryButtonClick(null, null);
-// 			}
-// 			else if (e.SessionState == Facebook.Client.Controls.FacebookSessionState.Closed)
-// 			{
-// 				this.userInfo.Visibility = Visibility.Collapsed;
-// 			}
-		}
-
 		private void Button_Facebook_Click(object sender, RoutedEventArgs e)
 		{
-			if (!((Frame)Window.Current.Content).Navigate(typeof(FacebookControls)))
+			if (!((Frame)Window.Current.Content).Navigate(typeof(MainView)))
 			{
 				throw new Exception("NavigationFailedExceptionMessage");
 			}
 		}
 
-		private void Button_Twitter_Click(object sender, RoutedEventArgs e)
+		private async void Btn_Twitter_Login_Click(object sender, RoutedEventArgs e)
 		{
-			if (!((Frame)Window.Current.Content).Navigate(typeof(TwitterControls)))
+			if (SharedState.Authorizer == null)
 			{
-				throw new Exception("NavigationFailedExceptionMessage");
+				var auth = new SingleUserAuthorizer
+				{
+					CredentialStore = new InMemoryCredentialStore
+					{
+						ConsumerKey = "MsLLdIN5d4tGig1mIOd544sre",
+						ConsumerSecret = "ZPHLC05kp0wt2ZZMYPsCPMrLlhe7bXIPgHP2BaK2PHoMSl8OWR",
+						OAuthToken = "730162950-GA2MJy8n6vqwstq2ZgCaU3fe5JzZjAi8bOKXN9sN",
+						OAuthTokenSecret = "ss5yUNU1RwXws2iuQMFZ77pC97r6smuoNO5e0pm8d6xux"
+					},
+				};
+
+				await auth.AuthorizeAsync();
+
+				SharedState.Authorizer = auth;
+
+				this.Btn_Twitter_Login.Content = "Logout";
+				MessageDialogHelper.Show("Twitter Login successfully");
 			}
+		}
+
+		private void Btn_FB_OnSessionStateChanged(object sender, Facebook.Client.Controls.SessionStateChangedEventArgs e)
+		{
+
 		}
 	}
 }

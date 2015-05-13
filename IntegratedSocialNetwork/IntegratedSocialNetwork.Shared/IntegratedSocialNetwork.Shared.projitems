@@ -17,9 +17,9 @@
     </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)GlobalData.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GlobalUtil.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Model\Post.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Model\ISNPost.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Model\Tweet.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Model\User.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Model\ISNUser.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SharedState.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModel\HomeViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModel\ViewModelLocator.cs" />

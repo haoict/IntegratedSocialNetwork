@@ -1,5 +1,9 @@
-﻿using System;
+﻿using Facebook.Client;
+using IntegratedSocialNetwork.Model;
+using LinqToTwitter;
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -13,12 +17,6 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 
-using Facebook;
-using Facebook.Client;
-using Facebook.Client.Controls.WebDialog;
-using System.Dynamic;
-using IntegratedSocialNetwork.Model;
-
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkID=390556
 
 namespace IntegratedSocialNetwork.View
@@ -26,9 +24,11 @@ namespace IntegratedSocialNetwork.View
 	/// <summary>
 	/// An empty page that can be used on its own or navigated to within a Frame.
 	/// </summary>
-	public sealed partial class FacebookControls : Page
+	public sealed partial class TestView : Page
 	{
-		public FacebookControls()
+		public ObservableCollection<ISNPost> itemsList { get; set; }
+
+		public TestView()
 		{
 			this.InitializeComponent();
 		}
@@ -38,42 +38,34 @@ namespace IntegratedSocialNetwork.View
 		/// </summary>
 		/// <param name="e">Event data that describes how this page was reached.
 		/// This parameter is typically used to configure the page.</param>
-
-
 		protected override void OnNavigatedTo(NavigationEventArgs e)
 		{
-			
-		}
-
-		private async void OnSessionStateChanged(object sender, Facebook.Client.Controls.SessionStateChangedEventArgs e)
-		{
-			this.myProgressRing.Visibility = (e.SessionState == Facebook.Client.Controls.FacebookSessionState.Opened) ? Visibility.Visible : Visibility.Collapsed;
-			//loginButton.Visibility = Visibility.Collapsed;
-
-			if (e.SessionState == Facebook.Client.Controls.FacebookSessionState.Opened)
-			{
-				this.userInfo.Visibility = Visibility.Visible;
-				this.RetriveUserInfo();
-				this.OnQueryButtonClick(null, null);
-			}
-			else if (e.SessionState == Facebook.Client.Controls.FacebookSessionState.Closed)
-			{
-				this.userInfo.Visibility = Visibility.Collapsed;
-			}
+			OnQueryButtonClick(null, null);
 		}
 
 		private async void OnQueryButtonClick(object sender, RoutedEventArgs e)
 		{
-			this.myProgressRing.Visibility = Visibility.Visible;
+			//this.myProgressRing.Visibility = Visibility.Visible;
+			itemsList = new ObservableCollection<ISNPost>();
+			//newFeedList.ItemsSource = itemsList;
+
+			FetchFacebookNewFeed();
+			FetchTwitterNewFeed();
+
+
+
+			//this.myProgressRing.Visibility = Visibility.Collapsed;
+		}
+
+		private async void FetchFacebookNewFeed()
+		{
+			// get facebook new feed
 			var fb = new Facebook.FacebookClient(Session.ActiveSession.CurrentAccessTokenData.AccessToken);
 
 			var parameters = new Dictionary<string, object>();
 			parameters[""] = "";
 
 			dynamic result = await fb.GetTaskAsync("/me/home", parameters);
-
-
-			List<ISNPost> itemsList = new List<ISNPost>();
 
 			foreach (var data in result[0])
 			{
@@ -93,18 +85,46 @@ namespace IntegratedSocialNetwork.View
 				{
 					continue;
 				}
-				
-			}
-			newFeedList.ItemsSource = itemsList;
 
-			this.myProgressRing.Visibility = Visibility.Collapsed;
+			}
+			//this.myProgressRing.Visibility = Visibility.Collapsed;
+		}
+
+		private async void FetchTwitterNewFeed()
+		{
+			// get tw new feed
+			if (SharedState.Authorizer != null)
+			{
+				var twitterCtx = new TwitterContext(SharedState.Authorizer);
+
+				var timelineResponse =
+					await
+					(from tweet in twitterCtx.Status
+					 where tweet.Type == StatusType.Home
+					 select tweet)
+					.ToListAsync();
+
+
+				List<ISNPost> Tweets =
+					(from tweet in timelineResponse
+					 select new ISNPost
+					 {
+						 user = new ISNUser("", tweet.User.ScreenNameResponse, tweet.User.ProfileImageUrl),
+						 message = tweet.Text,
+					 })
+					.ToList();
+
+				foreach (ISNPost isnp in Tweets)
+				{
+					itemsList.Add(isnp);
+				}
+				//this.myProgressRing.Visibility = Visibility.Collapsed;
+			}
 		}
 
 		private async void PublishStory()
 		{
 			var fb = new Facebook.FacebookClient(Session.ActiveSession.CurrentAccessTokenData.AccessToken);
-			
-			await this.loginButton.RequestNewPermissions("publish_stream");
 
 			var postParams = new
 			{
@@ -144,7 +164,7 @@ namespace IntegratedSocialNetwork.View
 			var client = new Facebook.FacebookClient(token);
 			dynamic result = await client.GetTaskAsync("me");
 			var currentUser = new Facebook.Client.GraphUser(result);
-			this.userInfo.Text = this.BuildUserInfoDisplay(currentUser);
+			//this.userInfo.Text = this.BuildUserInfoDisplay(currentUser);
 		}
 
 		private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)

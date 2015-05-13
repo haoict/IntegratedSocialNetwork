@@ -16,6 +16,8 @@ using Windows.UI.Xaml.Navigation;
 using Facebook;
 using Facebook.Client;
 using IntegratedSocialNetwork.Model;
+using LinqToTwitter;
+using System.Collections.ObjectModel;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkID=390556
 
@@ -26,6 +28,8 @@ namespace IntegratedSocialNetwork.View
 	/// </summary>
 	public sealed partial class MainView : Page
 	{
+		public ObservableCollection<ISNPost> itemsList { get; set; }
+
 		public MainView()
 		{
 			this.InitializeComponent();
@@ -38,6 +42,7 @@ namespace IntegratedSocialNetwork.View
 		/// This parameter is typically used to configure the page.</param>
 		protected override void OnNavigatedTo(NavigationEventArgs e)
 		{
+			OnQueryButtonClick(null, null);
 		}
 
 // 		private void OnSessionStateChanged(object sender, Facebook.Client.Controls.SessionStateChangedEventArgs e)
@@ -60,6 +65,20 @@ namespace IntegratedSocialNetwork.View
 		private async void OnQueryButtonClick(object sender, RoutedEventArgs e)
 		{
 			this.myProgressRing.Visibility = Visibility.Visible;
+			itemsList = new ObservableCollection<ISNPost>();
+			newFeedList.ItemsSource = itemsList;
+
+			FetchFacebookNewFeed();
+			FetchTwitterNewFeed();
+
+			
+			
+			//this.myProgressRing.Visibility = Visibility.Collapsed;
+		}
+
+		private async void FetchFacebookNewFeed()
+		{
+			// get facebook new feed
 			var fb = new Facebook.FacebookClient(Session.ActiveSession.CurrentAccessTokenData.AccessToken);
 
 			var parameters = new Dictionary<string, object>();
@@ -67,13 +86,10 @@ namespace IntegratedSocialNetwork.View
 
 			dynamic result = await fb.GetTaskAsync("/me/home", parameters);
 
-
-			List<Post> itemsList = new List<Post>();
-
 			foreach (var data in result[0])
 			{
-				Post tmp = new Post();
-				User usr = new User();
+				ISNPost tmp = new ISNPost();
+				ISNUser usr = new ISNUser();
 				try
 				{
 					tmp.id = data["id"];
@@ -90,9 +106,39 @@ namespace IntegratedSocialNetwork.View
 				}
 
 			}
-			newFeedList.ItemsSource = itemsList;
-
 			this.myProgressRing.Visibility = Visibility.Collapsed;
+		}
+
+		private async void FetchTwitterNewFeed()
+		{
+			// get tw new feed
+			if (SharedState.Authorizer != null)
+			{
+				var twitterCtx = new TwitterContext(SharedState.Authorizer);
+
+				var timelineResponse =
+					await
+					(from tweet in twitterCtx.Status
+					 where tweet.Type == StatusType.Home
+					 select tweet)
+					.ToListAsync();
+
+
+				List<ISNPost> Tweets =
+					(from tweet in timelineResponse
+					 select new ISNPost
+					 {
+						 user = new ISNUser("", tweet.User.ScreenNameResponse, tweet.User.ProfileImageUrl),
+						 message = tweet.Text,
+					 })
+					.ToList();
+
+				foreach (ISNPost isnp in Tweets)
+				{
+					itemsList.Add(isnp);
+				}
+				this.myProgressRing.Visibility = Visibility.Collapsed;
+			}
 		}
 
 		private async void PublishStory()
