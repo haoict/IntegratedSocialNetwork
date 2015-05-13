@@ -45,6 +45,23 @@ namespace IntegratedSocialNetwork.View
 			
 		}
 
+		private void OnSessionStateChanged(object sender, Facebook.Client.Controls.SessionStateChangedEventArgs e)
+		{
+// 			this.myProgressRing.Visibility = (e.SessionState == Facebook.Client.Controls.FacebookSessionState.Opened) ? Visibility.Visible : Visibility.Collapsed;
+// 			//loginButton.Visibility = Visibility.Collapsed;
+// 
+// 			if (e.SessionState == Facebook.Client.Controls.FacebookSessionState.Opened)
+// 			{
+// 				this.userInfo.Visibility = Visibility.Visible;
+// 				this.RetriveUserInfo();
+// 				this.OnQueryButtonClick(null, null);
+// 			}
+// 			else if (e.SessionState == Facebook.Client.Controls.FacebookSessionState.Closed)
+// 			{
+// 				this.userInfo.Visibility = Visibility.Collapsed;
+// 			}
+		}
+
 		private void Button_Facebook_Click(object sender, RoutedEventArgs e)
 		{
 			if (!((Frame)Window.Current.Content).Navigate(typeof(FacebookControls)))

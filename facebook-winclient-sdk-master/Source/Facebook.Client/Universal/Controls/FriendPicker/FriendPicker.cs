@@ -10,11 +10,12 @@ namespace Facebook.Client.Controls
     using System.Threading.Tasks;
     using Windows.Foundation;
 
+	using Windows.UI.Xaml;
 #if WINDOWS_PHONE || WINDOWS
     using Windows.UI.Xaml;
 #endif
 
-    /// <summary>
+	/// <summary>
     /// Shows a user interface that can be used to select Facebook friends.
     /// </summary>
     public class FriendPicker : Picker<GraphUser>
