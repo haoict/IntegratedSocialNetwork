@@ -55,7 +55,7 @@ namespace IntegratedSocialNetwork.View
 
 		private void Button_Twitter_Click(object sender, RoutedEventArgs e)
 		{
-			if (!((Frame)Window.Current.Content).Navigate(typeof(TwitterControls)))
+			if (!((Frame)Window.Current.Content).Navigate(typeof(FacebookControls)))
 			{
 				throw new Exception("NavigationFailedExceptionMessage");
 			}
