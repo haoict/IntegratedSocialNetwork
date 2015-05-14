@@ -29,6 +29,7 @@ namespace IntegratedSocialNetwork.View
 	public sealed partial class MainView : Page
 	{
 		public ObservableCollection<ISNPost> itemsList { get; set; }
+		private int currentPivot;
 
 		public MainView()
 		{
@@ -42,7 +43,9 @@ namespace IntegratedSocialNetwork.View
 		/// This parameter is typically used to configure the page.</param>
 		protected override void OnNavigatedTo(NavigationEventArgs e)
 		{
+			currentPivot = 1;
 			OnQueryButtonClick(null, null);
+			
 		}
 
 // 		private void OnSessionStateChanged(object sender, Facebook.Client.Controls.SessionStateChangedEventArgs e)
@@ -67,59 +70,79 @@ namespace IntegratedSocialNetwork.View
 			this.myProgressRing.Visibility = Visibility.Visible;
 			itemsList = new ObservableCollection<ISNPost>();
 			newFeedList.ItemsSource = itemsList;
+			newFeedList2.ItemsSource = itemsList;
 
-			FetchFacebookNewFeed();
-			FetchTwitterNewFeed();
+			if (currentPivot == 1)
+			{
+				FetchFacebookNewFeed("/me/home");
+				FetchTwitterNewFeed(StatusType.Home);
+			}
+			else if (currentPivot == 2)
+			{
+				FetchFacebookNewFeed("/me/feed");
+				FetchTwitterNewFeed(StatusType.User);
+			}
 
 			
 			
 			//this.myProgressRing.Visibility = Visibility.Collapsed;
 		}
 
-		private async void FetchFacebookNewFeed()
+		private async void FetchFacebookNewFeed(string feedType)
 		{
-			// get facebook new feed
-			var fb = new Facebook.FacebookClient(Session.ActiveSession.CurrentAccessTokenData.AccessToken);
+			if (Session.ActiveSession.CurrentAccessTokenData.AccessToken == "") return;
 
-			var parameters = new Dictionary<string, object>();
-			parameters[""] = "";
-
-			dynamic result = await fb.GetTaskAsync("/me/home", parameters);
-
-			foreach (var data in result[0])
+			try
 			{
-				ISNPost tmp = new ISNPost();
-				ISNUser usr = new ISNUser();
-				try
-				{
-					tmp.id = data["id"];
-					tmp.message = data["message"];
-					usr.id = data["from"]["id"];
-					usr.name = data["from"]["name"];
-					usr.picture = "http://graph.facebook.com/" + data["from"]["id"] + "/picture";
-					tmp.user = usr;
-					itemsList.Add(tmp);
-				}
-				catch (Exception exc)
-				{
-					continue;
-				}
+				var fb = new Facebook.FacebookClient(Session.ActiveSession.CurrentAccessTokenData.AccessToken);
 
+				var parameters = new Dictionary<string, object>();
+				parameters[""] = "";
+
+				dynamic result = await fb.GetTaskAsync(feedType, parameters);
+
+				foreach (var data in result[0])
+				{
+					ISNPost tmp = new ISNPost();
+					ISNUser usr = new ISNUser();
+					try
+					{
+						tmp.id = data["id"];
+						tmp.postSource = "Facebook";
+						tmp.message = data["message"];
+						usr.id = data["from"]["id"];
+						usr.name = data["from"]["name"];
+						usr.picture = "http://graph.facebook.com/" + data["from"]["id"] + "/picture";
+						tmp.user = usr;
+						itemsList.Add(tmp);
+					}
+					catch (Exception exc)
+					{
+						continue;
+					}
+
+				}
+				this.myProgressRing.Visibility = Visibility.Collapsed;
+				this.myProgressRing2.Visibility = Visibility.Collapsed;
 			}
-			this.myProgressRing.Visibility = Visibility.Collapsed;
+			catch (Exception exc)
+			{
+				MessageDialogHelper.Show(exc.Message);
+			}
 		}
 
-		private async void FetchTwitterNewFeed()
+		private async void FetchTwitterNewFeed(StatusType statusType)
 		{
 			// get tw new feed
-			if (SharedState.Authorizer != null)
+			if (SharedState.Authorizer == null) return;
+			try
 			{
 				var twitterCtx = new TwitterContext(SharedState.Authorizer);
 
 				var timelineResponse =
 					await
 					(from tweet in twitterCtx.Status
-					 where tweet.Type == StatusType.Home
+					 where tweet.Type == statusType
 					 select tweet)
 					.ToListAsync();
 
@@ -129,6 +152,7 @@ namespace IntegratedSocialNetwork.View
 					 select new ISNPost
 					 {
 						 user = new ISNUser("", tweet.User.ScreenNameResponse, tweet.User.ProfileImageUrl),
+						 postSource = "Tweeter",
 						 message = tweet.Text,
 					 })
 					.ToList();
@@ -138,6 +162,11 @@ namespace IntegratedSocialNetwork.View
 					itemsList.Add(isnp);
 				}
 				this.myProgressRing.Visibility = Visibility.Collapsed;
+				this.myProgressRing2.Visibility = Visibility.Collapsed;
+			}
+			catch (Exception exc)
+			{
+				MessageDialogHelper.Show(exc.Message);
 			}
 		}
 
@@ -188,18 +217,26 @@ namespace IntegratedSocialNetwork.View
 
 		private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
 		{
-
+			
 		}
 
-		private async void Test_Click(object sender, RoutedEventArgs e)
+		private void ListView_SelectionChanged2(object sender, SelectionChangedEventArgs e)
 		{
-			var fb = new Facebook.FacebookClient(Session.ActiveSession.CurrentAccessTokenData.AccessToken);
-			var parameters = new Dictionary<string, object>();
-			parameters[""] = "";
+			
+		}
 
-			dynamic result = await fb.GetTaskAsync("/565811000225586", parameters);
+		private void SecondPivot_Loaded(object sender, RoutedEventArgs e)
+		{
 
-
+			this.myProgressRing2.Visibility = Visibility.Visible;
+			currentPivot = 2;
+			if (itemsList != null)
+			{
+				itemsList.Clear();
+				
+			}
+			FetchFacebookNewFeed("/me/feed");
+			FetchTwitterNewFeed(StatusType.User);
 		}
 	}
 }
